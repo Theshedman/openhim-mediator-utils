@@ -1,6 +1,5 @@
 "use strict";
 
-import crypto from "crypto";
 import fetch from "node-fetch";
 import https from "https";
 
@@ -46,31 +45,12 @@ export const authenticate = async (options, callback) => {
 };
 
 export const genAuthHeaders = (options) => {
-  const salt = authUserMap.get(options.username);
-  if (salt === undefined) {
-    throw new Error(
-      `${options.username} has not been authenticated. Please use the .authenticate() function first`
-    );
-  }
 
-  const now = new Date().toISOString();
+  const { username, password } = options;
+  const basicAuthHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 
-  // create passhash
-  let shasum = crypto.createHash("sha512");
-  shasum.update(salt + options.password);
-  const passhash = shasum.digest("hex");
-
-  // create token
-  shasum = crypto.createHash("sha512");
-  shasum.update(passhash + salt + now);
-  const token = shasum.digest("hex");
-
-  // define request headers with auth credentails
   return {
-    "auth-username": options.username,
-    "auth-ts": now,
-    "auth-salt": salt,
-    "auth-token": token,
+    Authorization: basicAuthHeader,
   };
 };
 
